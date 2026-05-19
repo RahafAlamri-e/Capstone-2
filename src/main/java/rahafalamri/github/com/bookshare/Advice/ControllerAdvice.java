@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import rahafalamri.github.com.bookshare.Api.ApiException;
 import rahafalamri.github.com.bookshare.Api.ApiResponse;
 
@@ -61,27 +62,29 @@ public class ControllerAdvice {
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<?> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
-        return ResponseEntity.status(405).body(new ApiResponse("HTTP method not supported"));
+        return ResponseEntity.status(400).body(new ApiResponse("HTTP method not supported"));
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<?> handleNoHandlerFoundException(NoHandlerFoundException e) {
-        return ResponseEntity.status(404).body(new ApiResponse("Endpoint not found"));
+        return ResponseEntity.status(400).body(new ApiResponse("Endpoint not found"));
     }
 
     @ExceptionHandler(NullPointerException.class)
     public ResponseEntity<?> handleNullPointerException(NullPointerException e) {
-        return ResponseEntity.status(500).body(new ApiResponse("Null value error"));
+        return ResponseEntity.status(400).body(new ApiResponse("Null value error"));
     }
 
     @ExceptionHandler(ArithmeticException.class)
     public ResponseEntity<?> handleArithmeticException(ArithmeticException e) {
-        return ResponseEntity.status(500).body(new ApiResponse("Arithmetic error"));
+        return ResponseEntity.status(400).body(new ApiResponse("Arithmetic error"));
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleGeneralException(Exception e) {
-        return ResponseEntity.status(500).body(new ApiResponse("Internal server error"));
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<?> handleNoResourceFoundException(NoResourceFoundException e) {
+        String message = e.getMessage();
+        return ResponseEntity.status(400).body(new ApiResponse(message));
     }
+
 
 }
