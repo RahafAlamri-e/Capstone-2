@@ -58,6 +58,7 @@ public class UserService {
         oldUser.setPassword(user.getPassword());
         oldUser.setRole(user.getRole());
         oldUser.setInterests(user.getInterests());
+        oldUser.setLocation(user.getLocation());
 
         userRepository.save(oldUser);
     }

@@ -59,4 +59,7 @@ public class User {
 
     @Column(columnDefinition = "text")
     private String interests;
+
+    @Column(columnDefinition = "varchar(50) ")
+    private String location;
 }

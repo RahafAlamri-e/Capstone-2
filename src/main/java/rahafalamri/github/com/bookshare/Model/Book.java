@@ -45,8 +45,7 @@ public class Book {
     @Column(columnDefinition = "double default 0")
     private Double depositAmount = 0.0;
 
-    @NotNull(message = "Owner ID is required")
-    @Column(columnDefinition = "int not null")
+    @Column(columnDefinition = "int")
     private Integer ownerId;
 
     @Column(columnDefinition = "varchar(10) not null check (status in ('PENDING', 'APPROVED', 'REJECTED'))")

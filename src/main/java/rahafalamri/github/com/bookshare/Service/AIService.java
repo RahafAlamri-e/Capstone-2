@@ -1,5 +1,6 @@
 package rahafalamri.github.com.bookshare.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -9,7 +10,6 @@ import rahafalamri.github.com.bookshare.Api.ApiException;
 import rahafalamri.github.com.bookshare.Model.Book;
 import rahafalamri.github.com.bookshare.Model.User;
 import rahafalamri.github.com.bookshare.Repository.BookRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.*;
 
@@ -42,12 +42,29 @@ public class AIService {
         String availableBooks = "";
 
         for (Book book : books) {
+
+            if (book.getOwnerId().equals(user.getUserId())) {
+                continue;
+            }
+
             availableBooks +=
                     "Book ID: " + book.getBookId()
                             + ", Title: " + book.getTitle()
                             + ", Category: " + book.getCategory()
                             + ", Description: " + book.getDescription()
+                            + ", Location: " + book.getLocation()
+                            + ", Owner ID: " + book.getOwnerId()
                             + "\n";
+        }
+
+        if (availableBooks.isEmpty()) {
+            throw new ApiException("No books available for recommendation");
+        }
+
+        String userLocation = user.getLocation();
+
+        if (userLocation == null || userLocation.isEmpty()) {
+            userLocation = "NOT PROVIDED";
         }
 
         String prompt = """
@@ -55,7 +72,7 @@ public class AIService {
                 You are an AI book recommendation assistant for a book borrowing platform.
 
                 TASK:
-                Recommend books to the user based on their interests.
+                Recommend books to the user based on their interests and location when available.
 
                 IMPORTANT RULES:
                 Recommend ONLY books from the available books list.
@@ -64,25 +81,62 @@ public class AIService {
                 The response must be valid JSON only.
                 Do not add markdown.
                 Do not add explanation outside JSON.
+                Do not recommend books owned by the same user requesting recommendations.
+                Never return books where the ownerId matches the user's id.
+                If no books perfectly match the user's interests, recommend the closest matching books based on category, description, or title.
+                Never return an empty recommendations array if AVAILABLE BOOKS contains at least one book.
+                You MUST return at least 1 recommendation if AVAILABLE BOOKS is not empty.
+
+                LOCATION RULES:
+                If the user's location is provided, first recommend books that match the user's interests AND are in the same location as the user.
+                If the user's location is provided but no matching books exist in the same location, recommend books from other locations that match the user's interests.
+                In that case, clearly mention in the reason: "No matching books were found in your location, but this book is available in [book location]."
+                If the user's location is NOT PROVIDED, ignore location completely and recommend books based only on interests.
+                Do not reject recommendations just because the user's location is missing.
+
+                USER ID:
+                "%s"
 
                 USER INTERESTS:
                 "%s"
 
+                USER LOCATION:
+                "%s"
+
                 AVAILABLE BOOKS:
+                The following books are available in the system.
+
+                Each book includes:
+                - Book ID
+                - Title
+                - Category
+                - Description
+                - Location
+                - Owner ID
+
+                Use the location field only if USER LOCATION is not "NOT PROVIDED".
+                Use the ownerId field to avoid recommending the user's own books.
+
                 %s
 
                 OUTPUT JSON FORMAT:
                 {
-                  "message": "Recommended books based on your interests.",
+                  "message": "Recommended books based on your interests and location if available.",
                   "recommendations": [
                     {
                       "bookId": 1,
                       "title": "Book title",
-                      "reason": "Short reason why this book matches the user's interests."
+                      "location": "Book location",
+                      "reason": "Short reason why this book matches the user's interests and location rules."
                     }
                   ]
                 }
-                """.formatted(user.getInterests(), availableBooks);
+                """.formatted(
+                user.getUserId(),
+                user.getInterests(),
+                userLocation,
+                availableBooks
+        );
 
         return askChat(prompt);
     }
@@ -122,7 +176,8 @@ public class AIService {
             throw new ApiException("AI did not return a response");
         }
 
-        List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
+        List<Map<String, Object>> choices =
+                (List<Map<String, Object>>) responseBody.get("choices");
 
         if (choices == null || choices.isEmpty()) {
             throw new ApiException("AI returned no choices");
@@ -130,7 +185,8 @@ public class AIService {
 
         Map<String, Object> firstChoice = choices.get(0);
 
-        Map<String, Object> message = (Map<String, Object>) firstChoice.get("message");
+        Map<String, Object> message =
+                (Map<String, Object>) firstChoice.get("message");
 
         if (message == null) {
             throw new ApiException("AI returned an empty message");
@@ -145,11 +201,21 @@ public class AIService {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
 
-            return objectMapper.readValue(
+            Map<String, Object> result = objectMapper.readValue(
                     content.toString(),
                     Map.class
             );
 
+            List recommendations = (List) result.get("recommendations");
+
+            if (recommendations == null || recommendations.isEmpty()) {
+                throw new ApiException("AI returned no recommendations");
+            }
+
+            return result;
+
+        } catch (ApiException e) {
+            throw e;
         } catch (Exception e) {
             throw new ApiException("Failed to parse AI response");
         }
