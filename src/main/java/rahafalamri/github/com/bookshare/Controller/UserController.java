@@ -22,23 +22,13 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody @Valid User user, Errors errors) {
-
-        if (errors.hasErrors()) {
-            return ResponseEntity.status(400).body(new ApiResponse(errors.getFieldError().getDefaultMessage()));
-        }
-
+    public ResponseEntity<?> register(@RequestBody @Valid User user) {
         userService.addUser(user);
         return ResponseEntity.status(201).body(new ApiResponse("User registered successfully"));
     }
 
     @PutMapping("/update/{userId}")
-    public ResponseEntity<?> updateUser(@PathVariable Integer userId, @RequestBody @Valid User user, Errors errors) {
-
-        if (errors.hasErrors()) {
-            return ResponseEntity.status(400).body(new ApiResponse(errors.getFieldError().getDefaultMessage()));
-        }
-
+    public ResponseEntity<?> updateUser(@PathVariable Integer userId, @RequestBody @Valid User user) {
         userService.updateUser(userId, user);
         return ResponseEntity.status(200).body(new ApiResponse("User updated successfully"));
     }

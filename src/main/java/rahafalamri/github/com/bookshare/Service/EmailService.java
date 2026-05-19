@@ -65,7 +65,7 @@ public class EmailService {
 
     public void sendBorrowingTicket(User borrower, Book book, String returnDate) {
 
-        String fileName = "Borrowing_Contract_" + ".pdf";
+        String fileName = "Borrowing_Contract" + ".pdf";
 
         createBorrowingPdf(borrower, book, returnDate, fileName);
 

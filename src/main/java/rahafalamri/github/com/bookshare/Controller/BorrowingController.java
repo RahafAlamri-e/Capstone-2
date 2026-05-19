@@ -37,30 +37,19 @@ public class BorrowingController {
     }
 
     @PostMapping("/request")
-    public ResponseEntity<?> borrowBook(@RequestBody @Valid Borrowing borrowing, Errors errors) {
-
-        if (errors.hasErrors()) {
-            return ResponseEntity.status(400).body(new ApiResponse(errors.getFieldError().getDefaultMessage()));
-        }
-
+    public ResponseEntity<?> borrowBook(@RequestBody @Valid Borrowing borrowing) {
         borrowingService.borrowBook(borrowing);
         return ResponseEntity.status(201).body(new ApiResponse("Borrowing completed successfully"));
     }
 
     @PutMapping("/update/{userId}/{borrowingId}")
-    public ResponseEntity<?> updateBorrowing(@PathVariable Integer userId, @PathVariable Integer borrowingId, @RequestBody @Valid Borrowing borrowing, Errors errors) {
-
-        if (errors.hasErrors()) {
-            return ResponseEntity.status(400).body(new ApiResponse(errors.getFieldError().getDefaultMessage()));
-        }
-
+    public ResponseEntity<?> updateBorrowing(@PathVariable Integer userId, @PathVariable Integer borrowingId, @RequestBody @Valid Borrowing borrowing) {
         borrowingService.updateBorrowing(userId, borrowingId, borrowing);
         return ResponseEntity.status(200).body(new ApiResponse("Borrowing updated successfully"));
     }
 
     @DeleteMapping("/delete/{adminId}/{borrowingId}")
     public ResponseEntity<?> deleteBorrowing(@PathVariable Integer adminId, @PathVariable Integer borrowingId) {
-
         borrowingService.deleteBorrowing(adminId, borrowingId);
         return ResponseEntity.status(200).body(new ApiResponse("Borrowing deleted successfully"));
     }

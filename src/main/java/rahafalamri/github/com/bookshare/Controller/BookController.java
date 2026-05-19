@@ -3,7 +3,6 @@ package rahafalamri.github.com.bookshare.Controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 import rahafalamri.github.com.bookshare.Api.ApiResponse;
 import rahafalamri.github.com.bookshare.Model.Book;
@@ -46,23 +45,13 @@ public class BookController {
     }
 
     @PostMapping("/add/{ownerId}")
-    public ResponseEntity<?> addBook(@PathVariable Integer ownerId, @RequestBody @Valid Book book, Errors errors) {
-
-        if (errors.hasErrors()) {
-            return ResponseEntity.status(400).body(new ApiResponse(errors.getFieldError().getDefaultMessage()));
-        }
-
+    public ResponseEntity<?> addBook(@PathVariable Integer ownerId, @RequestBody @Valid Book book) {
         bookService.addBook(ownerId, book);
         return ResponseEntity.status(201).body(new ApiResponse("Book added successfully and waiting for admin approval"));
     }
 
     @PutMapping("/update/{ownerId}/{bookId}")
-    public ResponseEntity<?> updateBook(@PathVariable Integer ownerId, @PathVariable Integer bookId, @RequestBody @Valid Book book, Errors errors) {
-
-        if (errors.hasErrors()) {
-            return ResponseEntity.status(400).body(new ApiResponse(errors.getFieldError().getDefaultMessage()));
-        }
-
+    public ResponseEntity<?> updateBook(@PathVariable Integer ownerId, @PathVariable Integer bookId, @RequestBody @Valid Book book) {
         bookService.updateBook(ownerId, bookId, book);
         return ResponseEntity.status(200).body(new ApiResponse("Book updated successfully and waiting for approval again"));
     }
